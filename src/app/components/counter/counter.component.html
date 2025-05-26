@@ -1,0 +1,20 @@
+<div class="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+    <h1 class="text-4xl font-bold mb-6 text-gray-800">Counter Application</h1>
+    <div class="text-2xl font-semibold mb-4">
+        <h2 class="text-xl font-semibold mt-2 mb-2">{{count}}</h2>
+    </div>
+    <div class="flex space-x-4">
+        <button (click)="handleCounter('increment')"
+            class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow">
+            Increment
+        </button>
+        <button (click)="handleCounter('reset')"
+            class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg shadow">
+            Reset
+        </button>
+        <button (click)="handleCounter('decrement')"
+            class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow">
+            Decrement
+        </button>
+    </div>
+</div>

@@ -1,0 +1,26 @@
+<nav
+    class="sticky top-0 z-50 bg-white shadow-md px-6 py-4 flex justify-between items-center text-sm font-medium text-gray-700">
+    <div class="text-lg font-bold text-blue-700">
+        Chat App
+    </div>
+    <div class="text-lg font-semibold text-blue-600">
+        <a routerLink="/signin" *ngIf="!authService.isLoggedIn()" class="hover:text-blue-600 transition-colors">
+            Signin
+        </a>
+        <a routerLink="/signup" *ngIf="!authService.isLoggedIn()" class="hover:text-blue-600 transition-colors">
+            Signup
+        </a>
+        <a routerLink="/home" *ngIf="authService.isLoggedIn()" class="hover:text-blue-600 transition-colors">
+            Home
+        </a>
+        <a routerLink="/userProfile" *ngIf="authService.isLoggedIn()" class="hover:text-blue-600 transition-colors">
+            Profile
+        </a>
+        <a (click)="authService.logout()" *ngIf="authService.isLoggedIn()"
+            class="cursor-pointer hover:text-red-600 transition-colors">
+            Logout
+        </a>
+    </div>
+</nav>
+
+<router-outlet></router-outlet>
