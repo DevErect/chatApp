@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { environment } from '../../../../environments/environment';
 import { CommonModule } from '@angular/common';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-profile',
@@ -17,7 +18,7 @@ export class ProfileComponent {
     id: ''
   };
   errorMessage = '';
-  constructor(private http: HttpClient, private authService: AuthService) { }
+  constructor(private http: HttpClient, private authService: AuthService, public themeService: ThemeService) { }
   ngOnInit() {
     this.http.post(environment.apiUrl + '/userProfile', { user: { id: this.authService.getUserId() } }).subscribe({
       next: (response: any) => {
@@ -35,5 +36,14 @@ export class ProfileComponent {
 
   logout() {
     this.authService.logout();
+  }
+
+
+  toggleTheme(): void {
+    this.themeService.toggleTheme();
+  }
+
+  get isDark(): boolean {
+    return this.themeService.isDarkMode();
   }
 }

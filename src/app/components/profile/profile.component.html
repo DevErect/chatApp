@@ -1,4 +1,4 @@
-<div class="max-w-md mx-auto mt-12 p-6 bg-white shadow-md rounded-2xl hover:shadow-xl transition-shadow duration-300">
+<div class="max-w-md mx-auto mt-14 p-8 bg-gray-00 shadow-md rounded-2xl hover:shadow-xl transition-shadow duration-300">
     <h2 class="text-3xl font-extrabold text-blue-700 mb-6 text-center">User Profile</h2>
 
     <div class="flex flex-col items-center space-y-5 mb-8">
@@ -28,4 +28,13 @@
         <p *ngIf="!userData && !errorMessage" class="text-center text-gray-500 italic">Loading user data...</p>
         <p *ngIf="errorMessage" class="text-center text-red-600 font-semibold">{{ errorMessage }}</p>
     </ng-template>
+
+    <div class="flex justify-center mt-6">
+        <button (click)="toggleTheme()"
+            class="flex items-center justify-center w-10 h-10 rounded-full border border-gray-900 transition-colors"
+            aria-label="Toggle Dark Mode">
+            <i [ngClass]="isDark ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill'" class="text-xl text-blue-700 "></i>
+        </button>
+    </div>
+
 </div>
