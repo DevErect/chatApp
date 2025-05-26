@@ -18,7 +18,12 @@ export class LoginComponent {
     username: '',
   };
   errorMessage = '';
+  showPassword = false;
   constructor(private authService: AuthService, private router: Router) { }
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
+  }
 
   // onLogin() {
   //   this.errorMessage = '';
@@ -70,7 +75,15 @@ export class LoginComponent {
       },
       error: (error: any) => {
         console.error('Login error:', error);
-        this.errorMessage = 'An error occurred during login.';
+        if (error.error && error.error.message) {
+          this.errorMessage = error.error.message;
+        } 
+        else if (error.message) {
+          this.errorMessage = error.message;
+        }
+        else {
+          this.errorMessage = 'An error occurred during signup. Please try again.';
+        }
       }
     });
 

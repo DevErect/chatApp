@@ -18,7 +18,11 @@ export class SignupComponent {
   };
   errorMessage = '';
   successMessage = '';
+  showPassword = false;
   constructor(private authService: AuthService, private router: Router) { }
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
+  }
   onSignup() {
     this.errorMessage = '';
     this.successMessage = '';
@@ -37,7 +41,15 @@ export class SignupComponent {
       },
       error: (error: any) => {
         console.error('Signup error:', error);
-        this.errorMessage = 'An error occurred during signup.';
+        if (error.error && error.error.message) {
+          this.errorMessage = error.error.message;
+        } 
+        else if (error.message) {
+          this.errorMessage = error.message;
+        }
+        else {
+          this.errorMessage = 'An error occurred during signup. Please try again.';
+        }
       }
     });
   }

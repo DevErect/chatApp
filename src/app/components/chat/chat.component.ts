@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewChecked, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SocketService } from '../../services/socket.service';
@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 interface User {
   username: string;
   lastMessage?: string;
-}
+} 
 
 @Component({
   selector: 'app-chat',
@@ -17,34 +17,65 @@ interface User {
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css'],
 })
-export class ChatComponent implements OnInit {
+export class ChatComponent implements OnInit, AfterViewChecked {
+  @ViewChild('messagesContainer', { static: false }) messagesContainer!: ElementRef;
+  @ViewChild('messageInput', { static: false }) messageInput!: ElementRef;
+  
   username = '';
   recipient = '';
   message = '';
   messages: any[] = [];
   loggedIn = false;
   users: User[] = [];
+  private shouldScrollToBottom = false;
+  isSidebarCollapsed = false;
+  showEmojiPicker = false;
+
+  popularEmojis = [
+    '😀', '😂', '🥰', '😍', '🤔', '😭', '😡', '👍', '👎', '❤️',
+    '🔥', '💯', '✨', '🎉', '🙌', '👏', '🤝', '💪', '🙏', '👋',
+    '😊', '😎', '🤗', '😴', '🤯', '😱', '🥳', '😇', '🤪', '🙄'
+  ];
 
   constructor(
     private socketService: SocketService,
     private authService: AuthService
   ) { }
 
-
   ngOnInit() {
     this.initializeUser();
-
     this.socketService.messages$.subscribe((msgs) => {
+      const previousMessageCount = this.messages.length;
       this.messages = msgs;
+      if (msgs.length > previousMessageCount) {
+        this.shouldScrollToBottom = true;
+      }
       this.updateUsersWithLastMessages();
     });
-
     this.socketService.lastMessage$.subscribe((data: { user: string; message: string }) => {
       const userToUpdate = this.users.find(u => u.username === data.user);
       if (userToUpdate) {
         userToUpdate.lastMessage = data.message;
       }
     });
+  }
+
+  ngAfterViewChecked() {
+    if (this.shouldScrollToBottom) {
+      this.scrollToBottom();
+      this.shouldScrollToBottom = false;
+    }
+  }
+
+  private scrollToBottom(): void {
+    try {
+      if (this.messagesContainer) {
+        const element = this.messagesContainer.nativeElement;
+        element.scrollTop = element.scrollHeight;
+      }
+    } catch (err) {
+      console.error('Error scrolling to bottom:', err);
+    }
   }
 
   initializeUser() {
@@ -98,23 +129,51 @@ export class ChatComponent implements OnInit {
         this.message.trim()
       );
       this.message = '';
+      this.shouldScrollToBottom = true;
+      this.showEmojiPicker = false; 
     }
   }
 
   loadChat() {
     if (this.recipient.trim()) {
       this.socketService.loadChatWith(this.recipient.trim());
+      this.shouldScrollToBottom = true;
     }
   }
 
   startChatWith(user: string) {
     this.recipient = user;
     this.loadChat();
+    
+    if (this.isMobileView()) {
+      this.isSidebarCollapsed = true;
+    }
   }
 
   formatTimestamp(timestamp: string): string {
     return format(new Date(timestamp), 'p');
   }
 
+  toggleSidebar() {
+    this.isSidebarCollapsed = !this.isSidebarCollapsed;
+  }
 
+  isMobileView(): boolean {
+    return window.innerWidth < 640; 
+  }
+
+  toggleEmojiPicker() {
+    this.showEmojiPicker = !this.showEmojiPicker;
+  }
+
+  addEmoji(emoji: string) {
+    this.message += emoji;
+    if (this.messageInput) {
+      this.messageInput.nativeElement.focus();
+    }
+  }
+
+  closeEmojiPicker() {
+    this.showEmojiPicker = false;
+  }
 }
