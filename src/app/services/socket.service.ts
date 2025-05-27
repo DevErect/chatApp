@@ -64,6 +64,7 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { Observable, BehaviorSubject, Subject } from 'rxjs';
+import { environment } from '../../../environments/environment.development';
 
 @Injectable({
   providedIn: 'root',
@@ -89,7 +90,8 @@ export class SocketService {
   private username: string = '';
 
   constructor() {
-    this.socket = io('https://chatserver-jhde.onrender.com');
+    this.socket = io(`${'https://chatserver-jhde.onrender.com'}`);
+    // this.socket = io(`${environment.apiUrl || 'http://localhost:5000'}`);
 
     this.socket.on('privateMessage', (msg: any) => {
       const currentMsgs = this.messagesSubject.value;

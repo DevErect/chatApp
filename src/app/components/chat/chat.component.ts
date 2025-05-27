@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { SocketService } from '../../services/socket.service';
 import { AuthService } from '../../services/auth.service';
 import { format } from 'date-fns';
+import { environment } from '../../../../environments/environment';
+import { FileUploadingService } from '../../services/file-uploading.service';
 
 interface User {
   username: string;
   lastMessage?: string;
-} 
+}
 
 @Component({
   selector: 'app-chat',
@@ -20,7 +22,7 @@ interface User {
 export class ChatComponent implements OnInit, AfterViewChecked {
   @ViewChild('messagesContainer', { static: false }) messagesContainer!: ElementRef;
   @ViewChild('messageInput', { static: false }) messageInput!: ElementRef;
-  
+
   username = '';
   recipient = '';
   message = '';
@@ -30,16 +32,19 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   private shouldScrollToBottom = false;
   isSidebarCollapsed = false;
   showEmojiPicker = false;
-
   popularEmojis = [
     '😀', '😂', '🥰', '😍', '🤔', '😭', '😡', '👍', '👎', '❤️',
     '🔥', '💯', '✨', '🎉', '🙌', '👏', '🤝', '💪', '🙏', '👋',
     '😊', '😎', '🤗', '😴', '🤯', '😱', '🥳', '😇', '🤪', '🙄'
   ];
+  selectedFile: File | null = null;
+  filePreviewUrl: string | null = null;
+
 
   constructor(
     private socketService: SocketService,
-    private authService: AuthService
+    private authService: AuthService,
+    private uploadService: FileUploadingService
   ) { }
 
   ngOnInit() {
@@ -122,17 +127,34 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     });
   }
 
-  send() {
-    if (this.message.trim() && this.recipient.trim()) {
-      this.socketService.sendMessage(
-        this.recipient.trim(),
-        this.message.trim()
-      );
+send() {
+  if (this.selectedFile && this.recipient.trim()) {
+    this.uploadService.uploadFile(
+      this.selectedFile,
+      this.username,
+      this.recipient,
+      this.message.trim()
+    ).subscribe((msg: any) => {
+      this.messages.push(msg);
       this.message = '';
+      this.clearFilePreview();
       this.shouldScrollToBottom = true;
-      this.showEmojiPicker = false; 
-    }
+      this.showEmojiPicker = false;
+    }, (err) => {
+      console.error('File upload failed:', err);
+    });
+
+  } else if (this.message.trim() && this.recipient.trim()) {
+    this.socketService.sendMessage(
+      this.recipient.trim(),
+      this.message.trim()
+    );
+    this.message = '';
+    this.shouldScrollToBottom = true;
+    this.showEmojiPicker = false;
   }
+}
+
 
   loadChat() {
     if (this.recipient.trim()) {
@@ -144,7 +166,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   startChatWith(user: string) {
     this.recipient = user;
     this.loadChat();
-    
+
     if (this.isMobileView()) {
       this.isSidebarCollapsed = true;
     }
@@ -159,7 +181,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   }
 
   isMobileView(): boolean {
-    return window.innerWidth < 640; 
+    return window.innerWidth < 640;
   }
 
   toggleEmojiPicker() {
@@ -176,4 +198,35 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   closeEmojiPicker() {
     this.showEmojiPicker = false;
   }
+
+  uploadFile(event: any) {
+    const file = event.target.files[0];
+    if (!file || !this.username || !this.recipient) {
+      console.error('File upload failed: Missing file, username, or recipient.');
+      return;
+    }
+    this.uploadService.uploadFile(file, this.username, this.recipient, this.message).subscribe((msg: any) => {
+      this.messages.push(msg);
+      this.message = '';
+    });
+  }
+
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.filePreviewUrl = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  clearFilePreview(): void {
+    this.selectedFile = null;
+    this.filePreviewUrl = null;
+  }
+
 }

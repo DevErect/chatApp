@@ -50,6 +50,7 @@
                                     {{ user.lastMessage || 'No messages yet' }}
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </button>
@@ -83,25 +84,49 @@
                 </svg>
             </button>
         </div>
+
         <div #messagesContainer
             class="flex-1 p-3 sm:p-4 space-y-3 overflow-y-auto min-h-0 h-0 pt-16 pb-20 sm:pt-4 sm:pb-4"
             id="messagesContainer">
             <div *ngFor="let msg of messages">
                 <div [ngClass]="msg.sender === username ? 'items-end' : 'items-start'" class="flex flex-col">
                     <div class="px-3 sm:px-4 py-2 rounded-2xl max-w-[85%] sm:max-w-xs md:max-w-md lg:max-w-lg break-words text-sm sm:text-base"
-                        [ngClass]="
-                        msg.sender === username
-                            ? 'bg-blue-600 text-white self-end'
-                            : 'bg-gray-200 text-gray-900 self-start'
-                    ">
-                        {{ msg.message }}
+                        [ngClass]="msg.sender === username ? 'bg-blue-600 text-white self-end' : 'bg-gray-200 text-gray-900 self-start'">
+
+                        <!-- Text message -->
+                        <div *ngIf="msg.message">
+                            {{ msg.message }}
+                        </div>
+
+                        <!-- Display image -->
+                        <div *ngIf="msg.fileType?.startsWith('image/') && msg.fileUrl">
+                            <img [src]="msg.fileUrl" alt="uploaded image" class="mt-2 max-h-48 rounded-lg" />
+                        </div>
+
+                        <!-- Display video -->
+                        <div *ngIf="msg.fileType?.startsWith('video/') && msg.fileUrl">
+                            <video controls class="mt-2 max-h-48 rounded-lg">
+                                <source [src]="msg.fileUrl" [type]="msg.fileType" />
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+
+                        <!-- Display other files as download link -->
+                        <div
+                            *ngIf="!msg.fileType?.startsWith('image/') && !msg.fileType?.startsWith('video/') && msg.fileUrl">
+                            <a [href]="msg.fileUrl" target="_blank" download class="mt-2 text-blue-500 underline">
+                                📎 {{ msg.fileName || 'Download file' }}
+                            </a>
+                        </div>
                     </div>
+
                     <div class="text-xs mt-1 text-gray-500"
                         [ngClass]="msg.sender === username ? 'self-end' : 'self-start'">
                         {{ formatTimestamp(msg.timestamp) }}
                     </div>
                 </div>
             </div>
+
         </div>
 
         <div *ngIf="showEmojiPicker"
@@ -118,9 +143,35 @@
             </div>
         </div>
 
+
         <!-- Message Input Section -->
         <div
             class="p-3 sm:p-4 border-t border-gray-300 bg-white shrink-0 sm:relative fixed bottom-0 left-0 right-0 z-20 sm:z-auto">
+            <div *ngIf="filePreviewUrl"
+                class="mb-2 p-2 rounded-lg border border-gray-300 bg-white shadow-md relative max-w-xs ml-3">
+                <button (click)="clearFilePreview()"
+                    class="absolute top-0 right-0 mt-1 mr-1 text-gray-500 hover:text-red-600">
+                    ✕
+                </button>
+                <!-- Image Preview -->
+                <img *ngIf="selectedFile && selectedFile.type && selectedFile.type.startsWith('image/')"
+                    [src]="filePreviewUrl" class="max-h-48 rounded" />
+
+                <!-- Video Preview -->
+                <video *ngIf="selectedFile && selectedFile.type && selectedFile.type.startsWith('video/')"
+                    [src]="filePreviewUrl" controls class="max-h-48 rounded">
+                    Your browser does not support the video tag.
+                </video>
+
+                <!-- Other File -->
+                <div *ngIf="selectedFile && selectedFile.type && !selectedFile.type.startsWith('image/') && !selectedFile.type.startsWith('video/')"
+                    class="text-sm text-gray-800">
+                    <i class="bi bi-file-earmark-text-fill"></i> {{ selectedFile.name }}
+                </div>
+
+
+            </div>
+
             <div class="flex gap-2 items-end">
                 <button (click)="toggleEmojiPicker(); $event.stopPropagation()"
                     class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors shrink-0"
@@ -131,6 +182,12 @@
                             clip-rule="evenodd" />
                     </svg>
                 </button>
+                <label
+                    class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                    title="Attach file">
+                    <input type="file" (change)="onFileSelected($event)" hidden />
+                    <i class="bi bi-paperclip w-5 h-5"></i>
+                </label>
                 <input #messageInput [(ngModel)]="message" placeholder="Type a message"
                     class="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-0"
                     (keydown.enter)="send()" />
